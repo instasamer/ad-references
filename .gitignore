@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Database
+*.sqlite
+
+# Uploads (referencias subidas)
+uploads/*
+!uploads/.gitkeep
+
+# Build
+client/dist/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

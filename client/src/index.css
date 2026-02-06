@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Tag styles */
+.tag {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all cursor-pointer;
+}
+
+.tag-sector {
+  @apply bg-blue-100 text-blue-800 hover:bg-blue-200;
+}
+
+.tag-tono {
+  @apply bg-purple-100 text-purple-800 hover:bg-purple-200;
+}
+
+.tag-formato {
+  @apply bg-green-100 text-green-800 hover:bg-green-200;
+}
+
+.tag-epoca {
+  @apply bg-amber-100 text-amber-800 hover:bg-amber-200;
+}
+
+.tag-tecnica {
+  @apply bg-pink-100 text-pink-800 hover:bg-pink-200;
+}
+
+.tag-objetivo {
+  @apply bg-cyan-100 text-cyan-800 hover:bg-cyan-200;
+}
+
+.tag-selected {
+  @apply ring-2 ring-offset-1;
+}
+
+/* Card hover effect */
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+}
+
+/* Gradient backgrounds */
+.gradient-primary {
+  @apply bg-gradient-to-r from-primary-600 to-purple-600;
+}
+
+.gradient-secondary {
+  @apply bg-gradient-to-r from-blue-500 to-cyan-500;
+}
