@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Bot - Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #242736;
+      --border: #2e3144;
+      --text: #e4e4e7;
+      --text-muted: #9ca3af;
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --orange: #f97316;
+      --red: #ef4444;
+      --blue: #3b82f6;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-light), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.red { background: var(--red); }
+    .dot.yellow { background: var(--yellow); animation: pulse 1.5s infinite; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    main { padding: 1.5rem 2rem; max-width: 1400px; margin: 0 auto; }
+
+    /* Stats Row */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .stat-card .label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .stat-card .value { font-size: 2rem; font-weight: 700; }
+    .stat-card .sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    /* Grade Colors */
+    .grade-A { color: var(--green); }
+    .grade-B { color: var(--blue); }
+    .grade-C { color: var(--yellow); }
+    .grade-D { color: var(--red); }
+
+    /* Actions */
+    .actions-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    button:hover { background: var(--surface2); border-color: var(--primary); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    button.primary:hover { background: var(--primary-light); }
+
+    /* Table */
+    .table-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .table-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-header h2 { font-size: 1rem; font-weight: 600; }
+
+    .filters {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .filters select, .filters input {
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 0.8rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:hover { background: var(--surface2); }
+
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .badge-grade-A { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-grade-B { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .badge-grade-C { background: rgba(234,179,8,0.15); color: var(--yellow); }
+    .badge-grade-D { background: rgba(239,68,68,0.15); color: var(--red); }
+
+    .badge-status {
+      background: rgba(99,102,241,0.15);
+      color: var(--primary-light);
+    }
+
+    /* Log */
+    .log-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .log-section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
+
+    #log {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      max-height: 300px;
+      overflow-y: auto;
+      color: var(--text-muted);
+    }
+
+    .log-entry { padding: 0.2rem 0; }
+    .log-entry .time { color: var(--primary); }
+    .log-entry.error { color: var(--red); }
+    .log-entry.success { color: var(--green); }
+
+    a { color: var(--primary-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      main { padding: 1rem; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .actions-bar { flex-direction: column; }
+      .table-header { flex-direction: column; gap: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Agency Bot - Malaga</h1>
+    <div class="status-badge">
+      <span class="dot" id="whatsapp-dot"></span>
+      <span id="whatsapp-status">WhatsApp: checking...</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="label">Total Negocios</div><div class="value" id="stat-total">-</div></div>
+      <div class="stat-card"><div class="label">Grado D (sin web)</div><div class="value grade-D" id="stat-grade-d">-</div></div>
+      <div class="stat-card"><div class="label">Grado C (web mala)</div><div class="value grade-C" id="stat-grade-c">-</div></div>
+      <div class="stat-card"><div class="label">Sitios Generados</div><div class="value" id="stat-sites" style="color:var(--primary-light)">-</div></div>
+      <div class="stat-card"><div class="label">Contactados</div><div class="value" id="stat-contacted" style="color:var(--green)">-</div></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-bar">
+      <button class="primary" onclick="runAction('run-pipeline')">Ejecutar Pipeline Completo</button>
+      <button onclick="runAction('scrape')">1. Scrape Maps</button>
+      <button onclick="runAction('audit')">2. Auditar Webs</button>
+      <button onclick="runAction('build-sites')">3. Generar Sitios</button>
+      <button onclick="runAction('send-messages')">4. Enviar WhatsApp</button>
+      <button onclick="runAction('connect-whatsapp')">Conectar WhatsApp</button>
+    </div>
+
+    <!-- Business Table -->
+    <div class="table-section">
+      <div class="table-header">
+        <h2>Negocios</h2>
+        <div class="filters">
+          <select id="filter-grade" onchange="loadBusinesses()">
+            <option value="">Todos los grados</option>
+            <option value="A">Grado A</option>
+            <option value="B">Grado B</option>
+            <option value="C">Grado C</option>
+            <option value="D">Grado D</option>
+          </select>
+          <select id="filter-status" onchange="loadBusinesses()">
+            <option value="">Todos los estados</option>
+            <option value="scraped">Scraped</option>
+            <option value="prospect">Prospecto</option>
+            <option value="site_ready">Sitio listo</option>
+            <option value="contacted">Contactado</option>
+            <option value="skipped">Descartado</option>
+          </select>
+          <input type="text" id="filter-search" placeholder="Buscar..." oninput="loadBusinesses()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Rating</th>
+              <th>Grado</th>
+              <th>Estado</th>
+              <th>Sitio</th>
+              <th>WhatsApp</th>
+            </tr>
+          </thead>
+          <tbody id="businesses-table">
+            <tr><td colspan="7" class="empty-state">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="log-section">
+      <h2>Log de Actividad</h2>
+      <div id="log">
+        <div class="log-entry">Listo. Usa los botones de arriba para ejecutar acciones.</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API = window.location.origin + '/api';
+
+    async function loadStats() {
+      try {
+        const res = await fetch(API + '/stats');
+        const data = await res.json();
+
+        document.getElementById('stat-total').textContent = data.total;
+
+        const gradeD = data.byGrade.find(g => g.grade === 'D');
+        const gradeC = data.byGrade.find(g => g.grade === 'C');
+        document.getElementById('stat-grade-d').textContent = gradeD ? gradeD.count : 0;
+        document.getElementById('stat-grade-c').textContent = gradeC ? gradeC.count : 0;
+        document.getElementById('stat-sites').textContent = data.withSite;
+        document.getElementById('stat-contacted').textContent = data.contacted;
+
+        const dot = document.getElementById('whatsapp-dot');
+        const status = document.getElementById('whatsapp-status');
+        if (data.whatsapp.connected) {
+          dot.className = 'dot green';
+          status.textContent = 'WhatsApp: Conectado';
+        } else {
+          dot.className = 'dot red';
+          status.textContent = 'WhatsApp: Desconectado';
+        }
+      } catch (e) {
+        console.error('Error loading stats:', e);
+      }
+    }
+
+    async function loadBusinesses() {
+      try {
+        const grade = document.getElementById('filter-grade').value;
+        const status = document.getElementById('filter-status').value;
+        const search = document.getElementById('filter-search').value;
+
+        const params = new URLSearchParams();
+        if (grade) params.set('grade', grade);
+        if (status) params.set('status', status);
+        if (search) params.set('search', search);
+
+        const res = await fetch(API + '/businesses?' + params.toString());
+        const data = await res.json();
+
+        const tbody = document.getElementById('businesses-table');
+
+        if (data.businesses.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No hay negocios. Ejecuta el scraper primero.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.businesses.map(b => `
+          <tr>
+            <td>
+              <strong>${esc(b.name)}</strong>
+              <div style="font-size:0.75rem;color:var(--text-muted)">${esc(b.address || '')}</div>
+            </td>
+            <td>${esc(b.business_type || '-')}</td>
+            <td>${b.rating ? b.rating + ' (' + b.review_count + ')' : '-'}</td>
+            <td>${b.website_grade ? `<span class="badge badge-grade-${b.website_grade}">${b.website_grade}</span>` : '-'}</td>
+            <td><span class="badge badge-status">${esc(b.status)}</span></td>
+            <td>${b.generated_site_slug ? `<a href="/sites/${b.generated_site_slug}" target="_blank">Ver sitio</a>` : '-'}</td>
+            <td>${b.whatsapp_sent ? '✅' : (b.phone ? '📱' : '❌')}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error('Error loading businesses:', e);
+      }
+    }
+
+    async function runAction(name) {
+      addLog(`Ejecutando: ${name}...`, 'info');
+      try {
+        const res = await fetch(API + '/actions/' + name, { method: 'POST' });
+        const data = await res.json();
+        if (data.error) {
+          addLog(`Error: ${data.error}`, 'error');
+        } else {
+          addLog(`${name}: ${data.message || 'iniciado'}`, 'success');
+        }
+      } catch (e) {
+        addLog(`Error de red: ${e.message}`, 'error');
+      }
+
+      // Refresh data after a delay
+      setTimeout(() => { loadStats(); loadBusinesses(); }, 3000);
+      setTimeout(() => { loadStats(); loadBusinesses(); }, 10000);
+      setTimeout(() => { loadStats(); loadBusinesses(); }, 30000);
+    }
+
+    function addLog(msg, type = 'info') {
+      const log = document.getElementById('log');
+      const time = new Date().toLocaleTimeString('es-ES');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.innerHTML = `<span class="time">[${time}]</span> ${esc(msg)}`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function esc(s) {
+      const el = document.createElement('span');
+      el.textContent = s;
+      return el.innerHTML;
+    }
+
+    // Initial load
+    loadStats();
+    loadBusinesses();
+
+    // Auto refresh every 30s
+    setInterval(() => { loadStats(); loadBusinesses(); }, 30000);
+  </script>
+</body>
+</html>
