@@ -37,4 +37,36 @@ export default {
   cron: {
     schedule: process.env.CRON_SCHEDULE || '0 9 * * *',
   },
+
+  // Pricing
+  pricing: {
+    standard: 200,
+    earlyBird: 150,
+    earlyBirdHours: 48,
+    supportWeeks: 2,
+    currency: 'EUR',
+  },
+
+  // Invoice data (autónoma)
+  invoice: {
+    businessName: process.env.INVOICE_BUSINESS_NAME || '',
+    nif: process.env.INVOICE_NIF || '',
+    address: process.env.INVOICE_ADDRESS || '',
+    city: process.env.INVOICE_CITY || '',
+    postalCode: process.env.INVOICE_POSTAL_CODE || '',
+    email: process.env.INVOICE_EMAIL || '',
+    phone: process.env.INVOICE_PHONE || '',
+    iban: process.env.INVOICE_IBAN || '',
+    bankName: process.env.INVOICE_BANK_NAME || '',
+    // IVA 21% standard for services in Spain
+    ivaRate: 0.21,
+    // IRPF retention for autónomos (first 2 years can be 7%, then 15%)
+    irpfRate: parseFloat(process.env.INVOICE_IRPF_RATE || '0.15'),
+  },
+
+  // Pipeline control
+  pipeline: {
+    testMode: process.env.TEST_MODE !== 'false', // true by default
+    testBatchSize: parseInt(process.env.TEST_BATCH_SIZE || '5'),
+  },
 };

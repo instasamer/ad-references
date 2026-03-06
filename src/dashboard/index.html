@@ -6,429 +6,322 @@
   <title>Agency Bot - Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #242736;
-      --border: #2e3144;
-      --text: #e4e4e7;
-      --text-muted: #9ca3af;
-      --primary: #6366f1;
-      --primary-light: #818cf8;
-      --green: #22c55e;
-      --yellow: #eab308;
-      --orange: #f97316;
-      --red: #ef4444;
-      --blue: #3b82f6;
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #242736; --border: #2e3144;
+      --text: #e4e4e7; --muted: #9ca3af;
+      --primary: #6366f1; --primary-l: #818cf8;
+      --green: #22c55e; --yellow: #eab308; --orange: #f97316; --red: #ef4444; --blue: #3b82f6;
     }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    header h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--primary-light), var(--green));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .dot { width: 8px; height: 8px; border-radius: 50%; }
-    .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .dot.red { background: var(--red); }
-    .dot.yellow { background: var(--yellow); animation: pulse 1.5s infinite; }
-
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+    header h1 { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-l), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-right { display: flex; align-items: center; gap: 1rem; font-size: 0.85rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot.g { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.r { background: var(--red); }
+    .badge-mode { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+    .badge-test { background: rgba(234,179,8,0.2); color: var(--yellow); }
+    .badge-prod { background: rgba(34,197,94,0.2); color: var(--green); }
     main { padding: 1.5rem 2rem; max-width: 1400px; margin: 0 auto; }
 
-    /* Stats Row */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem;
-    }
-
-    .stat-card .label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-    .stat-card .value { font-size: 2rem; font-weight: 700; }
-    .stat-card .sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
-
-    /* Grade Colors */
-    .grade-A { color: var(--green); }
-    .grade-B { color: var(--blue); }
-    .grade-C { color: var(--yellow); }
-    .grade-D { color: var(--red); }
+    /* Funnel */
+    .funnel { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem; margin-bottom: 2rem; }
+    .funnel-step { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; position: relative; }
+    .funnel-step .num { font-size: 2rem; font-weight: 800; }
+    .funnel-step .label { font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .funnel-step::after { content: '→'; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1.2rem; }
+    .funnel-step:last-child::after { display: none; }
+    .c-green { color: var(--green); } .c-blue { color: var(--blue); } .c-yellow { color: var(--yellow); }
+    .c-orange { color: var(--orange); } .c-red { color: var(--red); } .c-primary { color: var(--primary-l); }
 
     /* Actions */
-    .actions-bar {
-      display: flex;
-      gap: 0.75rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
-
-    button {
-      padding: 0.6rem 1.2rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface);
-      color: var(--text);
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: all 0.2s;
-    }
-
+    .actions { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    button { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); cursor: pointer; font-size: 0.8rem; transition: all 0.15s; }
     button:hover { background: var(--surface2); border-color: var(--primary); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    button.primary:hover { background: var(--primary-l); }
+    button.sm { padding: 0.3rem 0.6rem; font-size: 0.7rem; }
 
-    button.primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
-    button.primary:hover { background: var(--primary-light); }
+    /* Tabs */
+    .tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+    .tab { padding: 0.6rem 1.2rem; cursor: pointer; font-size: 0.85rem; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--primary-l); border-bottom-color: var(--primary); }
 
     /* Table */
-    .table-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 2rem;
-    }
-
-    .table-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .table-header h2 { font-size: 1rem; font-weight: 600; }
-
-    .filters {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .filters select, .filters input {
-      padding: 0.4rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--surface2);
-      color: var(--text);
-      font-size: 0.8rem;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      text-align: left;
-      padding: 0.75rem 1.25rem;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border);
-    }
-
-    td {
-      padding: 0.75rem 1.25rem;
-      font-size: 0.85rem;
-      border-bottom: 1px solid var(--border);
-    }
-
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+    .panel-header { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .panel-header h2 { font-size: 0.9rem; font-weight: 600; }
+    .filters { display: flex; gap: 0.4rem; }
+    .filters select, .filters input { padding: 0.35rem 0.6rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text); font-size: 0.75rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 0.6rem 1rem; font-size: 0.7rem; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+    td { padding: 0.6rem 1rem; font-size: 0.8rem; border-bottom: 1px solid var(--border); }
     tr:hover { background: var(--surface2); }
+    .badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
+    .b-A { background: rgba(34,197,94,0.15); color: var(--green); }
+    .b-B { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .b-C { background: rgba(234,179,8,0.15); color: var(--yellow); }
+    .b-D { background: rgba(239,68,68,0.15); color: var(--red); }
+    .b-status { background: rgba(99,102,241,0.15); color: var(--primary-l); }
+    .b-paid { background: rgba(34,197,94,0.15); color: var(--green); }
+    a { color: var(--primary-l); text-decoration: none; } a:hover { text-decoration: underline; }
+    .empty { text-align: center; padding: 2rem; color: var(--muted); }
 
-    .badge {
-      display: inline-block;
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
-    }
+    /* Messages panel */
+    .msg-list { max-height: 400px; overflow-y: auto; }
+    .msg { padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+    .msg .meta { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.2rem; }
+    .msg.inbound { border-left: 3px solid var(--green); }
+    .msg.outbound { border-left: 3px solid var(--primary); }
+    .msg-text { word-break: break-word; }
 
-    .badge-grade-A { background: rgba(34,197,94,0.15); color: var(--green); }
-    .badge-grade-B { background: rgba(59,130,246,0.15); color: var(--blue); }
-    .badge-grade-C { background: rgba(234,179,8,0.15); color: var(--yellow); }
-    .badge-grade-D { background: rgba(239,68,68,0.15); color: var(--red); }
-
-    .badge-status {
-      background: rgba(99,102,241,0.15);
-      color: var(--primary-light);
-    }
-
-    /* Log */
-    .log-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem;
-    }
-
-    .log-section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
-
-    #log {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 0.8rem;
-      max-height: 300px;
-      overflow-y: auto;
-      color: var(--text-muted);
-    }
-
-    .log-entry { padding: 0.2rem 0; }
-    .log-entry .time { color: var(--primary); }
-    .log-entry.error { color: var(--red); }
-    .log-entry.success { color: var(--green); }
-
-    a { color: var(--primary-light); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: var(--text-muted);
-    }
+    /* Invoice section */
+    .invoice-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
 
     @media (max-width: 768px) {
       main { padding: 1rem; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .actions-bar { flex-direction: column; }
-      .table-header { flex-direction: column; gap: 0.75rem; }
+      .funnel { grid-template-columns: repeat(3, 1fr); }
+      .funnel-step::after { display: none; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Agency Bot - Malaga</h1>
-    <div class="status-badge">
-      <span class="dot" id="whatsapp-dot"></span>
-      <span id="whatsapp-status">WhatsApp: checking...</span>
+    <h1>Agency Bot · Málaga</h1>
+    <div class="header-right">
+      <span id="mode-badge"></span>
+      <span><span class="dot" id="wa-dot"></span> <span id="wa-status">WhatsApp</span></span>
     </div>
   </header>
 
   <main>
-    <!-- Stats -->
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card"><div class="label">Total Negocios</div><div class="value" id="stat-total">-</div></div>
-      <div class="stat-card"><div class="label">Grado D (sin web)</div><div class="value grade-D" id="stat-grade-d">-</div></div>
-      <div class="stat-card"><div class="label">Grado C (web mala)</div><div class="value grade-C" id="stat-grade-c">-</div></div>
-      <div class="stat-card"><div class="label">Sitios Generados</div><div class="value" id="stat-sites" style="color:var(--primary-light)">-</div></div>
-      <div class="stat-card"><div class="label">Contactados</div><div class="value" id="stat-contacted" style="color:var(--green)">-</div></div>
+    <!-- Sales Funnel -->
+    <div class="funnel" id="funnel">
+      <div class="funnel-step"><div class="num" id="f-total">-</div><div class="label">Scrapeados</div></div>
+      <div class="funnel-step"><div class="num c-red" id="f-prospect">-</div><div class="label">Prospectos (C+D)</div></div>
+      <div class="funnel-step"><div class="num c-primary" id="f-sites">-</div><div class="label">Webs generadas</div></div>
+      <div class="funnel-step"><div class="num c-blue" id="f-contacted">-</div><div class="label">Contactados</div></div>
+      <div class="funnel-step"><div class="num c-orange" id="f-interested">-</div><div class="label">Interesados</div></div>
+      <div class="funnel-step"><div class="num c-green" id="f-paid">-</div><div class="label">Pagados</div></div>
     </div>
 
     <!-- Actions -->
-    <div class="actions-bar">
-      <button class="primary" onclick="runAction('run-pipeline')">Ejecutar Pipeline Completo</button>
-      <button onclick="runAction('scrape')">1. Scrape Maps</button>
-      <button onclick="runAction('audit')">2. Auditar Webs</button>
-      <button onclick="runAction('build-sites')">3. Generar Sitios</button>
-      <button onclick="runAction('send-messages')">4. Enviar WhatsApp</button>
-      <button onclick="runAction('connect-whatsapp')">Conectar WhatsApp</button>
+    <div class="actions">
+      <button class="primary" onclick="run('run-pipeline')">Pipeline Completo</button>
+      <button onclick="run('scrape')">1. Scrape</button>
+      <button onclick="run('audit')">2. Auditar</button>
+      <button onclick="run('photos')">3. Fotos</button>
+      <button onclick="run('build-sites')">4. Generar webs</button>
+      <button onclick="run('send-messages')">5. Enviar WhatsApp</button>
+      <button onclick="run('follow-ups')">Follow-ups</button>
+      <button onclick="run('connect-whatsapp')">Conectar WA</button>
     </div>
 
-    <!-- Business Table -->
-    <div class="table-section">
-      <div class="table-header">
-        <h2>Negocios</h2>
-        <div class="filters">
-          <select id="filter-grade" onchange="loadBusinesses()">
-            <option value="">Todos los grados</option>
-            <option value="A">Grado A</option>
-            <option value="B">Grado B</option>
-            <option value="C">Grado C</option>
-            <option value="D">Grado D</option>
-          </select>
-          <select id="filter-status" onchange="loadBusinesses()">
-            <option value="">Todos los estados</option>
-            <option value="scraped">Scraped</option>
-            <option value="prospect">Prospecto</option>
-            <option value="site_ready">Sitio listo</option>
-            <option value="contacted">Contactado</option>
-            <option value="skipped">Descartado</option>
-          </select>
-          <input type="text" id="filter-search" placeholder="Buscar..." oninput="loadBusinesses()">
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="businesses" onclick="switchTab(this)">Negocios</div>
+      <div class="tab" data-tab="messages" onclick="switchTab(this)">Mensajes</div>
+      <div class="tab" data-tab="invoices" onclick="switchTab(this)">Facturación</div>
+    </div>
+
+    <!-- Businesses Tab -->
+    <div class="tab-content" id="tab-businesses">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Negocios (<span id="biz-count">0</span>)</h2>
+          <div class="filters">
+            <select id="f-grade" onchange="loadBiz()">
+              <option value="">Grado</option>
+              <option value="A">A</option><option value="B">B</option>
+              <option value="C">C</option><option value="D">D</option>
+            </select>
+            <select id="f-status" onchange="loadBiz()">
+              <option value="">Estado</option>
+              <option value="scraped">Scraped</option>
+              <option value="prospect">Prospecto</option>
+              <option value="site_ready">Web lista</option>
+              <option value="contacted">Contactado</option>
+              <option value="interested">Interesado</option>
+              <option value="deal_pending">Deal pendiente</option>
+              <option value="proforma_sent">Proforma enviada</option>
+              <option value="paid">Pagado</option>
+              <option value="rejected">Rechazado</option>
+              <option value="no_response">Sin respuesta</option>
+              <option value="skipped">Descartado</option>
+            </select>
+            <input type="text" id="f-search" placeholder="Buscar..." oninput="loadBiz()">
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Nombre</th><th>Tipo</th><th>Rating</th><th>Grado</th><th>Estado</th><th>Web</th><th>WA</th><th>Acciones</th></tr></thead>
+            <tbody id="biz-tbody"><tr><td colspan="8" class="empty">Cargando...</td></tr></tbody>
+          </table>
         </div>
       </div>
-      <div style="overflow-x:auto">
-        <table>
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Tipo</th>
-              <th>Rating</th>
-              <th>Grado</th>
-              <th>Estado</th>
-              <th>Sitio</th>
-              <th>WhatsApp</th>
-            </tr>
-          </thead>
-          <tbody id="businesses-table">
-            <tr><td colspan="7" class="empty-state">Cargando...</td></tr>
-          </tbody>
-        </table>
+    </div>
+
+    <!-- Messages Tab -->
+    <div class="tab-content" id="tab-messages" style="display:none">
+      <div class="panel">
+        <div class="panel-header"><h2>Conversaciones recientes</h2></div>
+        <div class="msg-list" id="msg-list"></div>
       </div>
     </div>
 
-    <!-- Activity Log -->
-    <div class="log-section">
-      <h2>Log de Actividad</h2>
-      <div id="log">
-        <div class="log-entry">Listo. Usa los botones de arriba para ejecutar acciones.</div>
+    <!-- Invoices Tab -->
+    <div class="tab-content" id="tab-invoices" style="display:none">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Facturación</h2>
+          <div>
+            <span style="font-size:0.8rem;color:var(--muted)">Precio: <strong>200€</strong> | Early bird: <strong>150€</strong></span>
+          </div>
+        </div>
+        <div id="invoice-list"></div>
       </div>
     </div>
   </main>
 
   <script>
-    const API = window.location.origin + '/api';
+    const API = location.origin + '/api';
+    const esc = s => { const e = document.createElement('span'); e.textContent = s; return e.innerHTML; };
 
-    async function loadStats() {
-      try {
-        const res = await fetch(API + '/stats');
-        const data = await res.json();
-
-        document.getElementById('stat-total').textContent = data.total;
-
-        const gradeD = data.byGrade.find(g => g.grade === 'D');
-        const gradeC = data.byGrade.find(g => g.grade === 'C');
-        document.getElementById('stat-grade-d').textContent = gradeD ? gradeD.count : 0;
-        document.getElementById('stat-grade-c').textContent = gradeC ? gradeC.count : 0;
-        document.getElementById('stat-sites').textContent = data.withSite;
-        document.getElementById('stat-contacted').textContent = data.contacted;
-
-        const dot = document.getElementById('whatsapp-dot');
-        const status = document.getElementById('whatsapp-status');
-        if (data.whatsapp.connected) {
-          dot.className = 'dot green';
-          status.textContent = 'WhatsApp: Conectado';
-        } else {
-          dot.className = 'dot red';
-          status.textContent = 'WhatsApp: Desconectado';
-        }
-      } catch (e) {
-        console.error('Error loading stats:', e);
-      }
+    // Tabs
+    function switchTab(el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+      el.classList.add('active');
+      document.getElementById('tab-' + el.dataset.tab).style.display = 'block';
+      if (el.dataset.tab === 'messages') loadMessages();
+      if (el.dataset.tab === 'invoices') loadInvoices();
     }
 
-    async function loadBusinesses() {
+    // Stats
+    async function loadStats() {
       try {
-        const grade = document.getElementById('filter-grade').value;
-        const status = document.getElementById('filter-status').value;
-        const search = document.getElementById('filter-search').value;
+        const d = await (await fetch(API + '/stats')).json();
+        document.getElementById('f-total').textContent = d.total;
+        const prospectCount = d.byGrade.filter(g => g.grade === 'C' || g.grade === 'D').reduce((s, g) => s + g.count, 0);
+        document.getElementById('f-prospect').textContent = prospectCount;
+        document.getElementById('f-sites').textContent = d.withSite;
+        document.getElementById('f-contacted').textContent = d.contacted;
+        document.getElementById('f-interested').textContent = d.interested;
+        document.getElementById('f-paid').textContent = d.paid;
 
-        const params = new URLSearchParams();
-        if (grade) params.set('grade', grade);
-        if (status) params.set('status', status);
-        if (search) params.set('search', search);
+        const dot = document.getElementById('wa-dot');
+        const st = document.getElementById('wa-status');
+        dot.className = d.whatsapp.connected ? 'dot g' : 'dot r';
+        st.textContent = d.whatsapp.connected ? 'Conectado' : 'Desconectado';
 
-        const res = await fetch(API + '/businesses?' + params.toString());
-        const data = await res.json();
+        const mb = document.getElementById('mode-badge');
+        mb.className = 'badge-mode ' + (d.testMode ? 'badge-test' : 'badge-prod');
+        mb.textContent = d.testMode ? `TEST (${d.batchSize})` : 'PRODUCCIÓN';
+      } catch (e) { console.error(e); }
+    }
 
-        const tbody = document.getElementById('businesses-table');
+    // Businesses
+    async function loadBiz() {
+      try {
+        const p = new URLSearchParams();
+        const g = document.getElementById('f-grade').value;
+        const s = document.getElementById('f-status').value;
+        const q = document.getElementById('f-search').value;
+        if (g) p.set('grade', g); if (s) p.set('status', s); if (q) p.set('search', q);
 
-        if (data.businesses.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No hay negocios. Ejecuta el scraper primero.</td></tr>';
+        const d = await (await fetch(API + '/businesses?' + p)).json();
+        document.getElementById('biz-count').textContent = d.total;
+        const tb = document.getElementById('biz-tbody');
+
+        if (d.businesses.length === 0) {
+          tb.innerHTML = '<tr><td colspan="8" class="empty">Sin resultados</td></tr>';
           return;
         }
 
-        tbody.innerHTML = data.businesses.map(b => `
-          <tr>
-            <td>
-              <strong>${esc(b.name)}</strong>
-              <div style="font-size:0.75rem;color:var(--text-muted)">${esc(b.address || '')}</div>
-            </td>
-            <td>${esc(b.business_type || '-')}</td>
-            <td>${b.rating ? b.rating + ' (' + b.review_count + ')' : '-'}</td>
-            <td>${b.website_grade ? `<span class="badge badge-grade-${b.website_grade}">${b.website_grade}</span>` : '-'}</td>
-            <td><span class="badge badge-status">${esc(b.status)}</span></td>
-            <td>${b.generated_site_slug ? `<a href="/sites/${b.generated_site_slug}" target="_blank">Ver sitio</a>` : '-'}</td>
-            <td>${b.whatsapp_sent ? '✅' : (b.phone ? '📱' : '❌')}</td>
-          </tr>
-        `).join('');
-      } catch (e) {
-        console.error('Error loading businesses:', e);
-      }
+        tb.innerHTML = d.businesses.map(b => `<tr>
+          <td><strong>${esc(b.name)}</strong><div style="font-size:0.7rem;color:var(--muted)">${esc(b.address || '')}</div></td>
+          <td style="font-size:0.75rem">${esc(b.business_type || '-')}</td>
+          <td>${b.rating ? b.rating + '<span style="color:var(--yellow)">★</span>' : '-'}</td>
+          <td>${b.website_grade ? '<span class="badge b-' + b.website_grade + '">' + b.website_grade + '</span>' : '-'}</td>
+          <td><span class="badge ${b.status === 'paid' ? 'b-paid' : 'b-status'}">${esc(b.status)}</span></td>
+          <td>${b.generated_site_slug ? '<a href="/sites/' + b.generated_site_slug + '" target="_blank">Ver</a>' : '-'}</td>
+          <td>${b.whatsapp_sent ? '✅' : (b.phone ? '📱' : '❌')}</td>
+          <td>${b.status === 'interested' || b.status === 'deal_pending' ? '<button class="sm" onclick="genProforma(' + b.id + ')">Proforma</button>' : ''}</td>
+        </tr>`).join('');
+      } catch (e) { console.error(e); }
     }
 
-    async function runAction(name) {
-      addLog(`Ejecutando: ${name}...`, 'info');
+    // Messages
+    async function loadMessages() {
       try {
-        const res = await fetch(API + '/actions/' + name, { method: 'POST' });
-        const data = await res.json();
-        if (data.error) {
-          addLog(`Error: ${data.error}`, 'error');
-        } else {
-          addLog(`${name}: ${data.message || 'iniciado'}`, 'success');
-        }
-      } catch (e) {
-        addLog(`Error de red: ${e.message}`, 'error');
-      }
-
-      // Refresh data after a delay
-      setTimeout(() => { loadStats(); loadBusinesses(); }, 3000);
-      setTimeout(() => { loadStats(); loadBusinesses(); }, 10000);
-      setTimeout(() => { loadStats(); loadBusinesses(); }, 30000);
+        const d = await (await fetch(API + '/stats')).json();
+        const ml = document.getElementById('msg-list');
+        if (!d.recentMessages.length) { ml.innerHTML = '<div class="empty">Sin mensajes</div>'; return; }
+        ml.innerHTML = d.recentMessages.map(m => `<div class="msg ${m.direction}">
+          <div class="meta">${esc(m.business_name)} · ${m.direction === 'inbound' ? '📥' : '📤'} · ${m.sent_at}</div>
+          <div class="msg-text">${esc(m.message).slice(0, 200)}</div>
+        </div>`).join('');
+      } catch (e) { console.error(e); }
     }
 
-    function addLog(msg, type = 'info') {
-      const log = document.getElementById('log');
-      const time = new Date().toLocaleTimeString('es-ES');
-      const entry = document.createElement('div');
-      entry.className = `log-entry ${type}`;
-      entry.innerHTML = `<span class="time">[${time}]</span> ${esc(msg)}`;
-      log.appendChild(entry);
-      log.scrollTop = log.scrollHeight;
+    // Invoices
+    async function loadInvoices() {
+      try {
+        const invoices = await (await fetch(API + '/invoices')).json();
+        const il = document.getElementById('invoice-list');
+        if (!invoices.length) { il.innerHTML = '<div class="empty">Sin facturas</div>'; return; }
+        il.innerHTML = invoices.map(i => `<div class="invoice-row">
+          <div><strong>${esc(i.invoice_number)}</strong> - ${esc(i.client_name)}<br><span style="font-size:0.7rem;color:var(--muted)">${esc(i.concept)}</span></div>
+          <div style="text-align:right">
+            <strong>${i.total_amount.toFixed(2)}€</strong><br>
+            <span class="badge ${i.type === 'factura' ? 'b-paid' : 'b-status'}">${i.type}</span>
+            ${i.type === 'proforma' && i.status !== 'converted' ? '<button class="sm" onclick="confirmPay(\'' + i.invoice_number + '\')">Confirmar pago</button>' : ''}
+          </div>
+        </div>`).join('');
+      } catch (e) { console.error(e); }
     }
 
-    function esc(s) {
-      const el = document.createElement('span');
-      el.textContent = s;
-      return el.innerHTML;
+    // Actions
+    async function run(name) {
+      try {
+        const r = await (await fetch(API + '/actions/' + name, { method: 'POST' })).json();
+        alert(r.error || r.message || 'Iniciado');
+      } catch (e) { alert('Error: ' + e.message); }
+      setTimeout(() => { loadStats(); loadBiz(); }, 3000);
+      setTimeout(() => { loadStats(); loadBiz(); }, 15000);
     }
 
-    // Initial load
-    loadStats();
-    loadBusinesses();
+    async function genProforma(bizId) {
+      const name = prompt('Nombre del cliente (para proforma):');
+      if (!name) return;
+      const nif = prompt('NIF/CIF (opcional):') || '';
+      try {
+        const r = await (await fetch(API + '/invoices/proforma', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessId: bizId, clientName: name, clientNif: nif })
+        })).json();
+        alert('Proforma generada: ' + r.invoiceNumber + ' (' + r.totalAmount.toFixed(2) + '€)');
+        loadInvoices();
+      } catch (e) { alert('Error: ' + e.message); }
+    }
 
-    // Auto refresh every 30s
-    setInterval(() => { loadStats(); loadBusinesses(); }, 30000);
+    async function confirmPay(proformaNum) {
+      if (!confirm('¿Confirmar pago recibido para ' + proformaNum + '?')) return;
+      try {
+        const r = await (await fetch(API + '/invoices/confirm-payment', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ proformaNumber: proformaNum })
+        })).json();
+        alert('Factura generada: ' + r.facturaNumber);
+        loadInvoices(); loadStats(); loadBiz();
+      } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    // Init
+    loadStats(); loadBiz();
+    setInterval(() => { loadStats(); loadBiz(); }, 30000);
   </script>
 </body>
 </html>

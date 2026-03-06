@@ -1,11 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import { existsSync } from 'fs';
 import { getDb, runQuery, runExec } from '../db/database.js';
 import { scrapeGoogleMaps } from '../scraper/google-maps.js';
+import { scrapePhotosForProspects } from '../scraper/photo-scraper.js';
 import { auditBusinesses } from '../auditor/website-auditor.js';
 import { buildSitesForProspects } from '../builder/site-generator.js';
-import { sendProspectMessages, getWhatsAppStatus, initWhatsApp } from '../messenger/whatsapp.js';
+import { sendProspectMessages, sendFollowUps, getWhatsAppStatus, initWhatsApp } from '../messenger/whatsapp.js';
+import { generateProforma, confirmPaymentAndInvoice, getPricingBreakdown, initBillingTables } from '../billing/invoice-generator.js';
 import config from '../../config.js';
 
 const app = express();
@@ -17,6 +18,9 @@ app.use('/sites', express.static('./sites'));
 
 // Serve dashboard
 app.use('/dashboard', express.static('./src/dashboard'));
+
+// Serve invoices
+app.use('/invoices', express.static('./data/invoices'));
 
 // ========== API: Stats ==========
 
@@ -37,9 +41,13 @@ app.get('/api/stats', async (req, res) => {
     const contacted = runQuery(
       "SELECT COUNT(*) as c FROM businesses WHERE whatsapp_sent = 1"
     )[0].c;
-    const lastRun = runQuery(
-      'SELECT * FROM scrape_runs ORDER BY started_at DESC LIMIT 1'
-    );
+    const interested = runQuery(
+      "SELECT COUNT(*) as c FROM businesses WHERE status IN ('interested', 'deal_pending', 'proforma_sent', 'paid')"
+    )[0].c;
+    const paid = runQuery(
+      "SELECT COUNT(*) as c FROM businesses WHERE status = 'paid'"
+    )[0].c;
+    const lastRun = runQuery('SELECT * FROM scrape_runs ORDER BY started_at DESC LIMIT 1');
     const recentMessages = runQuery(
       `SELECT m.*, b.name as business_name FROM messages m
        JOIN businesses b ON b.id = m.business_id
@@ -52,9 +60,13 @@ app.get('/api/stats', async (req, res) => {
       byStatus,
       withSite,
       contacted,
+      interested,
+      paid,
       lastRun: lastRun[0] || null,
       recentMessages,
       whatsapp: getWhatsAppStatus(),
+      testMode: config.pipeline.testMode,
+      batchSize: config.pipeline.testBatchSize,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -88,10 +100,8 @@ app.get('/api/businesses', async (req, res) => {
     params.push(parseInt(limit), parseInt(offset));
 
     const businesses = runQuery(sql, params);
-    const total = runQuery(
-      sql.replace('SELECT *', 'SELECT COUNT(*) as c').replace(/LIMIT.*$/, ''),
-      params.slice(0, -2)
-    )[0].c;
+    const countSql = sql.replace('SELECT *', 'SELECT COUNT(*) as c').replace(/ORDER BY.*$/, '');
+    const total = runQuery(countSql, params.slice(0, -2))[0].c;
 
     res.json({ businesses, total });
   } catch (error) {
@@ -116,9 +126,48 @@ app.get('/api/businesses/:id', async (req, res) => {
   }
 });
 
+// ========== API: Billing ==========
+
+app.get('/api/pricing', (req, res) => {
+  res.json({
+    standard: getPricingBreakdown(false),
+    earlyBird: getPricingBreakdown(true),
+    supportWeeks: config.pricing.supportWeeks,
+  });
+});
+
+app.post('/api/invoices/proforma', async (req, res) => {
+  try {
+    const { businessId, earlyBird, clientName, clientNif, clientAddress } = req.body;
+    const result = await generateProforma(businessId, { earlyBird, clientName, clientNif, clientAddress });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/invoices/confirm-payment', async (req, res) => {
+  try {
+    const { proformaNumber } = req.body;
+    const result = await confirmPaymentAndInvoice(proformaNumber);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/invoices', async (req, res) => {
+  try {
+    await initBillingTables();
+    const invoices = runQuery('SELECT * FROM invoices ORDER BY created_at DESC LIMIT 50');
+    res.json(invoices);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ========== API: Pipeline Actions ==========
 
-// Track running tasks
 const runningTasks = new Map();
 
 function createTask(name, fn) {
@@ -128,36 +177,26 @@ function createTask(name, fn) {
     }
 
     runningTasks.set(name, true);
-    const logs = [];
-    const onProgress = (p) => logs.push({ ...p, timestamp: new Date().toISOString() });
+    const onProgress = (p) => console.log(`[${name}] ${p.message}`);
 
     res.json({ status: 'started', message: `${name} iniciado` });
 
     try {
       await fn({ onProgress, ...req.body });
     } catch (error) {
-      logs.push({ phase: 'error', message: error.message, timestamp: new Date().toISOString() });
+      console.error(`[${name}] Error:`, error.message);
     } finally {
       runningTasks.set(name, false);
     }
   };
 }
 
-app.post('/api/actions/scrape', createTask('scrape', async (opts) => {
-  await scrapeGoogleMaps(opts);
-}));
-
-app.post('/api/actions/audit', createTask('audit', async (opts) => {
-  await auditBusinesses(opts);
-}));
-
-app.post('/api/actions/build-sites', createTask('build-sites', async (opts) => {
-  await buildSitesForProspects(opts);
-}));
-
-app.post('/api/actions/send-messages', createTask('send-messages', async (opts) => {
-  await sendProspectMessages(opts);
-}));
+app.post('/api/actions/scrape', createTask('scrape', (opts) => scrapeGoogleMaps(opts)));
+app.post('/api/actions/audit', createTask('audit', (opts) => auditBusinesses(opts)));
+app.post('/api/actions/photos', createTask('photos', (opts) => scrapePhotosForProspects(opts)));
+app.post('/api/actions/build-sites', createTask('build-sites', (opts) => buildSitesForProspects(opts)));
+app.post('/api/actions/send-messages', createTask('send-messages', (opts) => sendProspectMessages(opts)));
+app.post('/api/actions/follow-ups', createTask('follow-ups', (opts) => sendFollowUps(opts)));
 
 app.post('/api/actions/connect-whatsapp', async (req, res) => {
   try {
@@ -172,22 +211,24 @@ app.post('/api/actions/connect-whatsapp', async (req, res) => {
 app.post('/api/actions/run-pipeline', createTask('pipeline', async (opts) => {
   const { onProgress } = opts;
 
-  onProgress({ phase: 'scrape', message: 'Fase 1: Scraping Google Maps...' });
+  onProgress({ phase: 'scrape', message: 'Fase 1/5: Scraping Google Maps...' });
   await scrapeGoogleMaps({ onProgress });
 
-  onProgress({ phase: 'audit', message: 'Fase 2: Auditando webs...' });
+  onProgress({ phase: 'audit', message: 'Fase 2/5: Auditando webs...' });
   await auditBusinesses({ onProgress });
 
-  onProgress({ phase: 'build', message: 'Fase 3: Generando sitios web...' });
+  onProgress({ phase: 'photos', message: 'Fase 3/5: Buscando fotos...' });
+  await scrapePhotosForProspects({ onProgress });
+
+  onProgress({ phase: 'build', message: 'Fase 4/5: Generando sitios web...' });
   await buildSitesForProspects({ onProgress });
 
-  onProgress({ phase: 'send', message: 'Fase 4: Enviando mensajes WhatsApp...' });
+  onProgress({ phase: 'send', message: 'Fase 5/5: Enviando mensajes WhatsApp...' });
   await sendProspectMessages({ onProgress });
 
-  onProgress({ phase: 'done', message: 'Pipeline completado.' });
+  onProgress({ phase: 'done', message: 'Pipeline completado' });
 }));
 
-// Task status
 app.get('/api/actions/status', (req, res) => {
   const status = {};
   for (const [name, running] of runningTasks) {
@@ -196,27 +237,17 @@ app.get('/api/actions/status', (req, res) => {
   res.json(status);
 });
 
-// ========== API: Pipeline Logs ==========
-
-app.get('/api/pipeline-runs', async (req, res) => {
-  try {
-    const db = await getDb();
-    const runs = runQuery('SELECT * FROM pipeline_runs ORDER BY started_at DESC LIMIT 20');
-    res.json(runs);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // ========== Start Server ==========
 
 export async function startServer() {
   await getDb();
+  await initBillingTables();
 
   app.listen(config.port, () => {
-    console.log(`\n🚀 Servidor corriendo en ${config.baseUrl}`);
+    console.log(`\n🚀 Servidor: ${config.baseUrl}`);
     console.log(`📊 Dashboard: ${config.baseUrl}/dashboard`);
-    console.log(`🌐 Sitios generados: ${config.baseUrl}/sites/\n`);
+    console.log(`🌐 Sitios: ${config.baseUrl}/sites/`);
+    console.log(`💰 Facturas: ${config.baseUrl}/invoices/\n`);
   });
 }
 

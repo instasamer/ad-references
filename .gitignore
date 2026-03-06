@@ -1,6 +1,7 @@
 node_modules/
 data/*.sqlite
 data/whatsapp-session/
+data/invoices/
 sites/
 .env
 *.log
