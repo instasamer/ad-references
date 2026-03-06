@@ -7,6 +7,7 @@ import { auditBusinesses } from '../auditor/website-auditor.js';
 import { buildSitesForProspects } from '../builder/site-generator.js';
 import { sendProspectMessages, sendFollowUps, getWhatsAppStatus, initWhatsApp } from '../messenger/whatsapp.js';
 import { generateProforma, confirmPaymentAndInvoice, getPricingBreakdown, initBillingTables } from '../billing/invoice-generator.js';
+import { getMode } from '../ai/claude-client.js';
 import config from '../../config.js';
 
 const app = express();
@@ -67,6 +68,7 @@ app.get('/api/stats', async (req, res) => {
       whatsapp: getWhatsAppStatus(),
       testMode: config.pipeline.testMode,
       batchSize: config.pipeline.testBatchSize,
+      aiMode: getMode(),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -244,10 +246,12 @@ export async function startServer() {
   await initBillingTables();
 
   app.listen(config.port, () => {
+    const mode = getMode() === 'cli' ? 'Claude CLI (Pro Max)' : 'Claude API';
     console.log(`\n🚀 Servidor: ${config.baseUrl}`);
     console.log(`📊 Dashboard: ${config.baseUrl}/dashboard`);
     console.log(`🌐 Sitios: ${config.baseUrl}/sites/`);
-    console.log(`💰 Facturas: ${config.baseUrl}/invoices/\n`);
+    console.log(`💰 Facturas: ${config.baseUrl}/invoices/`);
+    console.log(`🤖 IA: ${mode}\n`);
   });
 }
 

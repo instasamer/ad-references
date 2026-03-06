@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';
 import config from '../../config.js';
 import { getDb, runQuery, runExec } from '../db/database.js';
+import { claudeChat } from '../ai/claude-client.js';
 
 /**
  * AI-powered WhatsApp conversation assistant.
@@ -66,16 +66,6 @@ DATOS DE COBRO:
 
 Responde SOLO con el mensaje de WhatsApp. Sin comillas, sin "Mensaje:", solo el texto.`;
 
-let client = null;
-
-function getClient() {
-  if (!client) {
-    if (!config.anthropicApiKey) throw new Error('ANTHROPIC_API_KEY requerida');
-    client = new Anthropic({ apiKey: config.anthropicApiKey });
-  }
-  return client;
-}
-
 export async function handleIncomingMessage(businessId, incomingMessage) {
   const db = await getDb();
   const [biz] = runQuery('SELECT * FROM businesses WHERE id = ?', [businessId]);
@@ -112,15 +102,11 @@ NEGOCIO ACTUAL:
 - Estado: ${biz.status}
 `;
 
-  const anthropic = getClient();
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 300,
+  const reply = await claudeChat({
     system: SYSTEM_PROMPT + '\n\n' + bizContext,
     messages,
+    maxTokens: 300,
   });
-
-  const reply = response.content[0].text.trim();
 
   runExec(
     `INSERT INTO messages (business_id, channel, direction, message, status)

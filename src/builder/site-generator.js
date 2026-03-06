@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { mkdirSync, writeFileSync, existsSync, readdirSync, readFileSync } from 'fs';
 import { getDb, runQuery, runExec } from '../db/database.js';
 import { getPlaceholderImages } from '../scraper/photo-scraper.js';
+import { claudeChat } from '../ai/claude-client.js';
 import config from '../../config.js';
 
 const SITES_DIR = './sites';
@@ -12,10 +12,6 @@ const SITES_DIR = './sites';
  */
 export async function buildSitesForProspects(options = {}) {
   const { onProgress = () => {} } = options;
-
-  if (!config.anthropicApiKey) {
-    throw new Error('ANTHROPIC_API_KEY requerida para generar sitios');
-  }
 
   const db = await getDb();
   const limit = config.pipeline.testMode ? config.pipeline.testBatchSize : 10;
@@ -39,7 +35,6 @@ export async function buildSitesForProspects(options = {}) {
 
   if (!existsSync(SITES_DIR)) mkdirSync(SITES_DIR, { recursive: true });
 
-  const client = new Anthropic({ apiKey: config.anthropicApiKey });
   let built = 0;
 
   for (const biz of prospects) {
@@ -49,7 +44,7 @@ export async function buildSitesForProspects(options = {}) {
       // Get photos for this business
       const photos = getBusinessPhotos(biz);
 
-      const html = await generateSiteHTML(client, biz, photos);
+      const html = await generateSiteHTML(biz, photos);
       const slug = slugify(biz.name);
 
       const siteDir = `${SITES_DIR}/${slug}`;
@@ -118,16 +113,13 @@ function getBusinessPhotos(biz) {
   return { local, urls, hasRealPhotos: local.length > 0 };
 }
 
-async function generateSiteHTML(client, biz, photos) {
+async function generateSiteHTML(biz, photos) {
   const prompt = buildPrompt(biz, photos);
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 8000,
+  let html = await claudeChat({
     messages: [{ role: 'user', content: prompt }],
+    maxTokens: 8000,
   });
-
-  let html = response.content[0].text;
 
   // Extract HTML from markdown code blocks if present
   const htmlMatch = html.match(/```html\n([\s\S]*?)```/);
