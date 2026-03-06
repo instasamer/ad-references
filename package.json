@@ -1,7 +1,7 @@
 {
-  "name": "openclaw-agency-bot",
+  "name": "websites-paco",
   "version": "1.0.0",
-  "description": "Automated agency bot - finds local businesses, audits sites, builds websites, contacts via WhatsApp",
+  "description": "Websites Paco - webs para negocios locales en Málaga",
   "type": "module",
   "scripts": {
     "start": "node index.js",

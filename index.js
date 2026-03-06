@@ -81,7 +81,7 @@ async function main() {
   const mode = config.pipeline.testMode ? 'TEST' : 'PRODUCCIÓN';
   console.log(`
   ╔══════════════════════════════════════╗
-  ║      Agency Bot - Málaga             ║
+  ║      Websites Paco · Málaga          ║
   ║      Restaurantes · ${mode.padEnd(13)}║
   ╚══════════════════════════════════════╝
   `);
